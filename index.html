@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demon's Crest — Password Tool</title>
+<style>
+  :root {
+    --bg: #07071a;
+    --panel: #10102c;
+    --panel2: #171741;
+    --line: #3b3b8f;
+    --gold: #ffd75e;
+    --green: #4dff77;
+    --red: #ff5566;
+    --cyan: #6ee7ff;
+    --dim: #9a9ad0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 18px;
+    background: var(--bg);
+    background-image: repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 1px, transparent 1px 3px);
+    color: #e8e8ff;
+    font-family: "Courier New", ui-monospace, monospace;
+    font-size: 14px;
+  }
+  header { text-align: center; margin-bottom: 14px; }
+  h1 { margin: 0; color: var(--gold); letter-spacing: 4px; font-size: 26px; text-shadow: 0 0 8px rgba(255,215,94,.35); }
+  .sub { color: var(--dim); letter-spacing: 6px; font-size: 12px; margin-top: 2px; }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 10px; }
+  .tab {
+    flex: 1; padding: 10px; background: var(--panel); color: var(--dim);
+    border: 3px solid var(--line); font: inherit; font-weight: bold; letter-spacing: 3px;
+    cursor: pointer;
+  }
+  .tab.active { color: var(--gold); border-color: var(--gold); background: var(--panel2); }
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 12px; }
+  .presets span { color: var(--dim); font-size: 11px; letter-spacing: 2px; }
+  .presets button {
+    background: var(--panel); color: var(--cyan); border: 2px solid var(--line);
+    font: inherit; font-size: 11px; padding: 4px 8px; cursor: pointer; letter-spacing: 1px;
+  }
+  .presets button:hover { border-color: var(--cyan); }
+  section {
+    background: var(--panel); border: 3px solid var(--line);
+    padding: 14px; margin-bottom: 12px;
+  }
+  .grid { display: grid; grid-template-columns: repeat(4, 52px); gap: 6px; justify-content: center; margin: 8px 0; }
+  .cell {
+    width: 52px; height: 52px; text-align: center; font: inherit; font-weight: bold;
+    font-size: 24px; color: var(--gold); background: #05050f; border: 2px solid var(--line);
+    text-transform: uppercase; outline: none;
+  }
+  .cell:focus { border-color: var(--gold); box-shadow: 0 0 6px rgba(255,215,94,.4); }
+  .cellview {
+    width: 52px; height: 52px; display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: bold; color: var(--gold); background: #05050f;
+    border: 2px solid var(--line); letter-spacing: 0;
+  }
+  .status { text-align: center; min-height: 20px; margin: 6px 0; letter-spacing: 1px; }
+  .status.ok { color: var(--green); }
+  .status.bad { color: var(--red); }
+  .status.idle { color: var(--dim); }
+  fieldset {
+    border: 2px solid var(--line); margin: 8px 0; padding: 8px 10px;
+  }
+  legend { color: var(--cyan); font-size: 11px; letter-spacing: 2px; padding: 0 6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; font-size: 12px; }
+  .chip input { accent-color: var(--gold); }
+  .chip input:disabled { accent-color: var(--dim); cursor: default; }
+  .chip.checked { color: var(--green); }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; margin: 8px 0; }
+  button.act {
+    background: var(--panel2); color: var(--gold); border: 3px solid var(--gold);
+    font: inherit; font-weight: bold; letter-spacing: 2px; padding: 8px 16px; cursor: pointer;
+  }
+  button.act:hover { background: var(--gold); color: #000; }
+  .hpval { color: var(--gold); font-weight: bold; font-size: 16px; min-width: 40px; }
+  input[type=range] { accent-color: var(--gold); width: 220px; }
+  .raw {
+    font-size: 11px; color: var(--dim); background: #05050f; border: 1px solid var(--line);
+    padding: 6px 8px; margin-top: 8px; line-height: 1.7; word-break: break-all;
+  }
+  .raw b { color: var(--cyan); font-weight: normal; }
+  .notice { color: var(--gold); font-size: 12px; margin: 4px 0; min-height: 14px; }
+  .notice div { margin: 2px 0; }
+  footer { text-align: center; color: var(--dim); font-size: 11px; margin-top: 14px; line-height: 1.8; }
+  footer .ok { color: var(--green); }
+  footer .bad { color: var(--red); }
+  .big { font-size: 16px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>DEMON'S CREST</h1>
+    <div class="sub">PASSWORD TOOL</div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" id="tabDec">DECODE</button>
+    <button class="tab" id="tabEnc">ENCODE</button>
+  </div>
+
+  <div class="presets">
+    <span>LOAD&nbsp;VECTOR:</span>
+    <button data-pw="HDDSDTGXBQQZNDMN">V1</button>
+    <button data-pw="LWDYMSQMVWDHGPSG">V2</button>
+    <button data-pw="MRBLMFNPHGJBJRZB">V3</button>
+    <button data-pw="QFFFKNRRDDLRXGTQ">V4&nbsp;100%</button>
+    <button data-pw="RBNLXHGBVGBBLYLD">V5&nbsp;BOSS</button>
+    <button data-pw="PDQMRRMVFWGXDTSG">ALLITEMS</button>
+    <button data-pw="GDBFYLFVHZJSZHCS">STAGE1</button>
+    <button data-pw="HDDMNTKBHQLFXKLD">STAGE2</button>
+    <button data-pw="PBGXRVNGKGKXWRZB">STAGE6</button>
+    <button data-pw="FDQPQRMBFGNHGTKL">ULT</button>
+  </div>
+
+  <section id="panelDec">
+    <div class="grid" id="decGrid"></div>
+    <div class="status idle" id="decStatus">Enter a 16-letter password (paste works too)</div>
+    <div id="decState"></div>
+    <div class="raw" id="decRaw" hidden></div>
+    <div class="row"><button class="act" id="decCopy">COPY PASSWORD</button></div>
+  </section>
+
+  <section id="panelEnc" hidden>
+    <fieldset><legend>HEART CONTAINERS / HP</legend>
+      <div class="row">
+        <input type="range" id="hpSlider" min="4" max="20" value="4">
+        <span class="hpval" id="hpVal">HP 4</span>
+      </div>
+      <div class="chips" id="contBoxes"></div>
+    </fieldset>
+    <fieldset><legend>CRESTS / FORMS</legend>
+      <div class="chips" id="crestBoxes"></div>
+      <div class="chips" id="ultBox" style="margin-top:4px"></div>
+    </fieldset>
+    <fieldset><legend>SPELLS (VELLUM)</legend><div class="chips" id="spellBoxes"></div></fieldset>
+    <fieldset><legend>POTIONS (URNS)</legend><div class="chips" id="potionBoxes"></div></fieldset>
+    <fieldset><legend>TALISMANS</legend><div class="chips" id="taliBoxes"></div></fieldset>
+    <fieldset><legend>FLAGS</legend><div class="chips" id="flagBoxes"></div></fieldset>
+    <div class="row">
+      <button class="act" id="btnGen">GENERATE</button>
+      <button class="act" id="btnVar">NEW VARIANT</button>
+    </div>
+    <div class="grid" id="encGrid"></div>
+    <div class="notice" id="encNotice"></div>
+    <div class="status idle" id="encStatus"></div>
+    <div class="raw" id="encRaw" hidden></div>
+    <div class="row"><button class="act" id="encCopy">COPY PASSWORD</button></div>
+  </section>
+
+  <footer>
+    <button class="act" id="btnTest">RUN SELF-TEST</button>
+    <div id="testOut"></div>
+    <div>
+      Codec fully reverse-engineered &amp; verified — see <b>findings.md</b> (alphabet §1, permutation §2,<br>
+      checksum §3, validator/gate §5, state map §7-§8). Keys and letter variants are chosen at random,<br>
+      exactly like the game's PRNG: every generated password is one of many valid renderings.
+    </div>
+  </footer>
+</div>
+
+<script>
+/*CODEC-BEGIN*/
+// ===== Demon's Crest password codec =====
+// Port of tmp/roundtrip.py (verified byte-exact against 10 known passwords).
+const ALPHABET = "BCDFGHJKLMNPQRSTVWXYZ";
+// char index -> nibble (table $01:C71B, 21 entries; 16-20 are PRNG aliases)
+const IDX2NIB = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,1,6,8,11,14];
+// nibble -> [primary char index, alternate char index] (table $01:C730)
+const NIB2IDX = [[0,0],[1,16],[2,2],[3,3],[4,4],[5,5],[6,17],[7,7],[8,18],[9,9],
+                 [10,10],[11,19],[12,12],[13,13],[14,20],[15,15]];
+// 8x8 bit-permutation matrix at $01:C834
+const MATRIX = [
+  [0x40,0x04,0x20,0x80,0x02,0x10,0x01,0x08],
+  [0x04,0x10,0x40,0x08,0x80,0x02,0x20,0x01],
+  [0x08,0x02,0x20,0x40,0x01,0x10,0x04,0x80],
+  [0x08,0x20,0x04,0x40,0x02,0x80,0x01,0x10],
+  [0x20,0x40,0x80,0x04,0x01,0x08,0x02,0x10],
+  [0x40,0x20,0x01,0x04,0x08,0x80,0x10,0x02],
+  [0x01,0x40,0x08,0x20,0x04,0x10,0x80,0x02],
+  [0x20,0x80,0x04,0x08,0x01,0x10,0x02,0x40],
+];
+const BITPOS = {1:0,2:1,4:2,8:3,16:4,32:5,64:6,128:7};
+
+function popcount(x){ let c=0; while(x){ x &= x-1; c++; } return c; }
+
+// Generator forward permutation: out[X] bit r = src[r] bit p where MATRIX[r][X]==1<<p
+function permute(src){
+  const out = [];
+  for (let X = 0; X < 8; X++){
+    let b = 0;
+    for (let r = 0; r < 8; r++) if (src[r] & MATRIX[r][X]) b |= (1 << r);
+    out.push(b);
+  }
+  return out;
+}
+// Decoder inverse permutation
+function unpermute(out){
+  const src = [0,0,0,0,0,0,0,0];
+  for (let r = 0; r < 8; r++)
+    for (let X = 0; X < 8; X++){
+      const p = BITPOS[MATRIX[r][X]];
+      if ((out[X] >> r) & 1) src[r] |= (1 << p);
+    }
+  return src;
+}
+
+// 16 letters -> {idxs, nibs, out, src}
+function decodePassword(pw){
+  const idxs = [...pw].map(c => ALPHABET.indexOf(c));
+  const nibs = idxs.map(i => IDX2NIB[i]);
+  const out = [];
+  for (let k = 0; k < 8; k++) out.push((nibs[2*k] << 4) | nibs[2*k+1]);
+  return { idxs, nibs, out, src: unpermute(out) };
+}
+
+function unmaskPayload(src){ const key = src[6]; return src.slice(0,6).map(b => b ^ key); }
+
+// The game's checks: checksum, key nibbles, plausibility gate (findings §3/§5.1)
+function validate(src){
+  const sum = src.slice(0,7).reduce((a,b)=>a+b,0) & 0xFF;
+  if (sum !== src[7]) return { ok:false, reason:'checksum mismatch (byte 8)' };
+  const key = src[6];
+  if ((key & 0xF0) === 0)      return { ok:false, reason:'key high nibble is $0 (invalid)' };
+  if ((key & 0xF0) === 0xF0)   return { ok:false, reason:'key high nibble is $F (invalid)' };
+  const P = unmaskPayload(src);
+  if ((P.reduce((a,b)=>a+b,0) & 0xF) !== (key & 0xF))
+    return { ok:false, reason:'key low nibble does not match payload sum' };
+  const [P0,P1,P2,P3,P4] = P;
+  const allFF = P0===0xFF && P1===0xFF && P2===0xFF && P3===0xFF && P4===0xFF;
+  const all00 = P0===0 && P1===0 && P2===0 && P3===0 && P4===0;
+  const freeShape = ((P3 & 1) === 1) && ((P1 & 1) === 0);
+  if (!freeShape && !allFF && !all00)
+    return { ok:false, reason:"rejected by the game's plausibility gate" };
+  return { ok:true, P, key };
+}
+
+// Loader ($04:C0F0): src -> game state $1E50-$1E58
+function extractState(src){
+  const P = unmaskPayload(src);
+  const val = ((P[2] << 8 | P[1]) & 0x07FE) >> 1;
+  const e52 = ((P[1] & 1) | ((val & 0x1F) << 1) | (val & 0x0C0)) & 0xFF;
+  const e53 = ((P[2] & 0xF8) | ((val & 0x300) >> 8)) & 0xFF;
+  const cont = (P[4] << 8) | P[3];
+  return {
+    hp: 4 + popcount(cont),
+    crest: P[0], ult: (P[1] & 1) === 1,
+    spell: val & 0x1F, potion: (val >> 5) & 0x1F,
+    talis: e53 & 0xF8, cont,
+    boss: (P[5] & 1) === 1, unknown58: (P[5] >> 1) & 7,
+    raw: { e51: P[0], e52, e53, e54: P[3], e55: P[4], val, e58: P[5] & 0x0F }
+  };
+}
+
+// Generator ($04:BACB-$BAEC): state -> unmasked payload P0..P5
+function payload(st){
+  const val = (st.spell & 0x1F) | ((st.potion & 0x1F) << 5);
+  return [
+    st.crest & 0xFF,
+    (st.ult ? 1 : 0) | ((val & 0x7F) << 1),
+    ((val >> 7) & 7) | (st.talis & 0xF8),
+    st.cont & 0xFF,
+    (st.cont >> 8) & 0xFF,
+    st.boss ? 1 : 0
+  ];
+}
+
+// Enforce the game's acceptance rules on a state (findings §5.1)
+function autoFix(st){
+  const s = Object.assign({}, st);
+  const notices = [];
+  const anyItem = s.crest !== 0 || s.ult || s.spell !== 0 || s.potion !== 0 || s.talis !== 0;
+  if (!(s.cont & 1) && (popcount(s.cont) > 0 || anyItem)){
+    s.cont |= 1;
+    notices.push('Container 1 auto-enabled: the game only accepts passwords whose heart-container bits include container 1.');
+  }
+  if (s.ult && (s.crest !== 0xFF || s.spell !== 0x1F || s.potion !== 0x1F || s.talis !== 0xF8 || s.cont !== 0xFFFF)){
+    s.crest = 0xFF; s.spell = 0x1F; s.potion = 0x1F; s.talis = 0xF8; s.cont = 0xFFFF;
+    notices.push('Ultimate Gargoyle owned: state auto-completed to the exact 100% form the game requires.');
+  }
+  return { state: s, notices };
+}
+
+// Full generator: state -> {src, out, pw}. keyHi null = random 1..$E; alias = random glyphs.
+function encodeState(st, keyHi, alias){
+  const P = payload(st);
+  if (keyHi == null){
+    do { keyHi = 1 + Math.floor(Math.random() * 14); } while (keyHi === 0xF);
+  }
+  const key = (keyHi << 4) | (P.reduce((a,b)=>a+b,0) & 0xF);
+  const masked = P.map(b => b ^ key);
+  const chk = (masked.reduce((a,b)=>a+b,0) + key) & 0xFF;
+  const src = masked.concat([key, chk]);
+  const out = permute(src);
+  let pw = '';
+  for (const byte of out){
+    pw += ALPHABET[pickIdx(byte >> 4, alias)];
+    pw += ALPHABET[pickIdx(byte & 0xF, alias)];
+  }
+  return { src, out, pw };
+}
+function pickIdx(nib, alias){
+  const pair = NIB2IDX[nib];
+  return (alias && pair[1] !== pair[0] && Math.random() < 0.5) ? pair[1] : pair[0];
+}
+
+const KNOWN = [
+  ['V1',      'HDDSDTGXBQQZNDMN'],
+  ['V2',      'LWDYMSQMVWDHGPSG'],
+  ['V3',      'MRBLMFNPHGJBJRZB'],
+  ['V4 100%', 'QFFFKNRRDDLRXGTQ'],
+  ['V5 BOSS', 'RBNLXHGBVGBBLYLD'],
+  ['ALLITEMS','PDQMRRMVFWGXDTSG'],
+  ['STAGE1',  'GDBFYLFVHZJSZHCS'],
+  ['STAGE2',  'HDDMNTKBHQLFXKLD'],
+  ['STAGE6',  'PBGXRVNGKGKXWRZB'],
+  ['ULT',     'FDQPQRMBFGNHGTKL'],
+];
+
+if (typeof module !== 'undefined') module.exports = {
+  ALPHABET, IDX2NIB, NIB2IDX, MATRIX, KNOWN, popcount, permute, unpermute,
+  decodePassword, unmaskPayload, validate, extractState, payload, autoFix, encodeState
+};
+/*CODEC-END*/
+</script>
+
+<script>
+// ===== UI =====
+const CREST_NAMES  = ['BUSTER','TORNADO','CLAW','DEMON FIRE','EARTH','AIR','WATER','TIME'];
+const SPELL_NAMES  = ['SHADOW','HOLD','IMP','SHOCK','DEATH'];
+const POTION_NAMES = ['MERCURY','SULFUR','HERB','ELIXIR','GINSENG'];
+const TALI_NAMES   = ['CROWN','SKULL','ARMOR','FANG','HAND'];
+
+const $ = id => document.getElementById(id);
+const hex = (v, n=2) => '$' + v.toString(16).toUpperCase().padStart(n, '0');
+
+// ---- build checkbox groups ----
+function addChips(containerId, names, prefix, disabled, extra){
+  const box = typeof containerId === 'string' ? $(containerId) : containerId;
+  names.forEach((nm, i) => {
+    const l = document.createElement('label');
+    l.className = 'chip';
+    const b = document.createElement('input');
+    b.type = 'checkbox'; b.id = prefix + i; b.disabled = !!disabled;
+    b.addEventListener('change', refreshChip);
+    l.appendChild(b);
+    l.appendChild(document.createTextNode(' ' + nm));
+    l._bit = (extra && extra.bit !== undefined) ? extra.bit(i) : i;
+    l._mask = 1 << l._bit;
+    box.appendChild(l);
+  });
+  return box;
+}
+function refreshChip(e){
+  const l = e.target.closest('.chip');
+  if (l) l.classList.toggle('checked', e.target.checked);
+  if (e.target.closest('#contBoxes') || e.target.id === 'cb-hp') syncHP();
+  if (e.target.closest('#panelEnc')) liveEncodePreview();
+}
+function setChip(prefix, i, on){
+  const b = $(prefix + i);
+  if (b){ b.checked = !!on; const l = b.closest('.chip'); if (l) l.classList.toggle('checked', on); }
+}
+
+// decode display boxes (disabled), grouped into fieldsets
+(function buildDecPanel(){
+  const groups = [
+    ['CRESTS / FORMS',    'dv-c', CREST_NAMES],
+    ['',                  'dv-u', ['ULTIMATE GARGOYLE']],
+    ['SPELLS (VELLUM)',   'dv-s', SPELL_NAMES],
+    ['POTIONS (URNS)',    'dv-p', POTION_NAMES],
+    ['TALISMANS',         'dv-t', TALI_NAMES, i => 3 + i],
+    ['HEART CONTAINERS',  'dv-n', Array.from({length:16}, (_,i) => 'C'+(i+1))],
+    ['FLAGS',             'dv-b', ['BOSS-ONLY MODE'], () => 0],
+  ];
+  const hpDiv = document.createElement('div');
+  hpDiv.className = 'big'; hpDiv.id = 'dv-hp';
+  hpDiv.style.color = 'var(--gold)'; hpDiv.style.margin = '2px 0 8px';
+  hpDiv.textContent = 'HP —';
+  $('decState').appendChild(hpDiv);
+  for (const [title, prefix, names, bitFn] of groups){
+    const fs = document.createElement('fieldset');
+    if (title){ const lg = document.createElement('legend'); lg.textContent = title; fs.appendChild(lg); }
+    const div = document.createElement('div'); div.className = 'chips';
+    fs.appendChild(div);
+    $('decState').appendChild(fs);
+    addChips(div, names, prefix, true, bitFn !== undefined ? { bit: bitFn } : undefined);
+  }
+})();
+
+// encode input boxes
+addChips('contBoxes',  Array.from({length:16}, (_,i)=>'C'+(i+1)), 'cb-n', false);
+addChips('crestBoxes', CREST_NAMES,  'cb-c', false);
+addChips('ultBox',     ['ULTIMATE GARGOYLE (requires 100% state)'], 'cb-ult', false, { bit: () => 0 });
+addChips('spellBoxes', SPELL_NAMES,  'cb-s', false);
+addChips('potionBoxes',POTION_NAMES, 'cb-p', false);
+addChips('taliBoxes',  TALI_NAMES,   'cb-t', false, { bit: i => 3 + i });
+addChips('flagBoxes',  ['BOSS-ONLY MODE (boss fights, no regular enemies)'], 'cb-boss', false, { bit: () => 0 });
+
+// ---- decode grid ----
+const decInputs = [];
+(function buildDecGrid(){
+  for (let i = 0; i < 16; i++){
+    const inp = document.createElement('input');
+    inp.className = 'cell'; inp.maxLength = 1; inp.setAttribute('autocomplete','off');
+    inp.addEventListener('input', () => {
+      let v = inp.value.toUpperCase();
+      v = [...v].filter(c => ALPHABET.includes(c)).join('');
+      inp.value = v.slice(-1);
+      if (inp.value && i < 15) decInputs[i+1].focus();
+      renderDecode();
+    });
+    inp.addEventListener('paste', e => {
+      e.preventDefault();
+      const t = (e.clipboardData.getData('text') || '').toUpperCase();
+      const chars = [...t].filter(c => ALPHABET.includes(c)).slice(0, 16);
+      if (!chars.length) return;
+      for (let k = 0; k < 16; k++) decInputs[k].value = chars[k] || '';
+      renderDecode();
+    });
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !inp.value && i > 0){ decInputs[i-1].focus(); }
+    });
+    $('decGrid').appendChild(inp);
+    decInputs.push(inp);
+  }
+})();
+
+function fillDecGrid(pw){
+  for (let i = 0; i < 16; i++) decInputs[i].value = pw[i] || '';
+}
+
+// ---- tabs ----
+function setTab(dec){
+  $('panelDec').hidden = !dec; $('panelEnc').hidden = dec;
+  $('tabDec').classList.toggle('active', dec);
+  $('tabEnc').classList.toggle('active', !dec);
+}
+$('tabDec').onclick = () => setTab(true);
+$('tabEnc').onclick = () => setTab(false);
+
+// ---- decode rendering ----
+function renderDecode(){
+  const pw = decInputs.map(i => i.value).join('');
+  const st = $('decStatus');
+  const raw = $('decRaw');
+  const n = pw.length;
+  if (n < 16){
+    st.className = 'status idle';
+    st.textContent = `Enter a 16-letter password (${n}/16)`;
+    raw.hidden = true;
+    showDecoded(null);
+    return;
+  }
+  const d = decodePassword(pw);
+  const v = validate(d.src);
+  raw.hidden = false;
+  raw.innerHTML = rawDump('payload+key+chk ($10-$17)', d.src);
+  if (!v.ok){
+    st.className = 'status bad';
+    st.textContent = '✗ INVALID — ' + v.reason;
+    showDecoded(null, d.src);
+  } else {
+    const s = extractState(d.src);
+    st.className = 'status ok';
+    st.textContent = '✓ VALID — accepted by the game';
+    showDecoded(s, d.src);
+  }
+}
+
+function showDecoded(s, src){
+  const names = { crest: CREST_NAMES, spell: SPELL_NAMES, potion: POTION_NAMES, tali: TALI_NAMES };
+  const set = (prefix, value, bitBase) => {
+    for (let i = 0; i < 16; i++){
+      const b = $(prefix + i);
+      if (!b) continue;
+      const bit = bitBase ? bitBase(i) : i;
+      b.checked = !!(value & (1 << bit));
+      const l = b.closest('.chip'); if (l) l.classList.toggle('checked', b.checked);
+    }
+  };
+  $('dv-hp').textContent = s ? `HP ${s.hp}` : 'HP —';
+  set('dv-c', s ? s.crest : 0);
+  set('dv-u', s ? (s.ult ? 1 : 0) : 0, () => 0);
+  set('dv-s', s ? s.spell : 0);
+  set('dv-p', s ? s.potion : 0);
+  set('dv-t', s ? s.talis : 0, i => 3 + i);
+  set('dv-n', s ? s.cont : 0);
+  set('dv-b', s && s.boss ? 1 : 0, () => 0);
+  const u = s ? s.unknown58 : 0;
+  const flagsEl = $('dv-b0').closest('.chips');
+  let extra = flagsEl.querySelector('.unk');
+  if (u){
+    if (!extra){ extra = document.createElement('span'); extra.className = 'unk'; extra.style.color = 'var(--gold)'; flagsEl.appendChild(extra); }
+    extra.textContent = ` (unknown flag bits set: ${u.toString(2).padStart(3,'0')})`;
+  } else if (extra) extra.textContent = '';
+}
+
+function rawDump(label, src){
+  return `<b>${label}:</b> ${src.map(b => hex(b)).join(' ')}`;
+}
+
+// ---- encode tab ----
+function collectState(){
+  const bits = prefix => {
+    let v = 0;
+    for (let i = 0; i < 16; i++){ const b = $(prefix + i); if (b && b.checked) v |= (1 << i); }
+    return v;
+  };
+  return {
+    crest: bits('cb-c'), ult: $('cb-ult0').checked,
+    spell: bits('cb-s'), potion: bits('cb-p'),
+    talis: bits('cb-t') << 3, cont: bits('cb-n'),
+    boss: $('cb-boss0').checked
+  };
+}
+
+function syncUIFromState(s){
+  const set = (prefix, value, bitBase) => {
+    for (let i = 0; i < 16; i++){
+      const b = $(prefix + i);
+      if (!b) continue;
+      const bit = bitBase ? bitBase(i) : i;
+      setChip(prefix, i, !!(value & (1 << bit)));
+    }
+  };
+  set('cb-c', s.crest);
+  setChip('cb-ult', 0, s.ult);
+  set('cb-s', s.spell);
+  set('cb-p', s.potion);
+  set('cb-t', s.talis, i => 3 + i);
+  set('cb-n', s.cont);
+  setChip('cb-boss', 0, s.boss);
+  syncHP();
+}
+
+function syncHP(){
+  let cont = 0;
+  for (let i = 0; i < 16; i++) if ($('cb-n' + i) && $('cb-n' + i).checked) cont |= (1 << i);
+  $('hpSlider').value = 4 + popcount(cont);
+  $('hpVal').textContent = 'HP ' + (4 + popcount(cont));
+}
+
+$('hpSlider').addEventListener('input', () => {
+  const n = parseInt($('hpSlider').value, 10) - 4;
+  for (let i = 0; i < 16; i++) setChip('cb-n', i, i < n);
+  syncHP();
+  liveEncodePreview();
+});
+
+let lastEncode = null;
+function generate(){
+  const collected = collectState();
+  const { state, notices } = autoFix(collected);
+  syncUIFromState(state);
+  const e = encodeState(state, null, true);
+  lastEncode = e;
+  showEncodeResult(e, notices, true);
+}
+function newVariant(){
+  if (!lastEncode) return generate();
+  const state = collectState();          // already fixed from last generate
+  const e = encodeState(state, null, true);
+  lastEncode = e;
+  showEncodeResult(e, [], true);
+}
+function showEncodeResult(e, notices, fillDecode){
+  const grid = $('encGrid');
+  grid.innerHTML = '';
+  [...e.pw].forEach(c => {
+    const d = document.createElement('div');
+    d.className = 'cellview'; d.textContent = c;
+    grid.appendChild(d);
+  });
+  const v = validate(e.src);
+  const stEl = $('encStatus');
+  stEl.className = 'status ' + (v.ok ? 'ok' : 'bad');
+  stEl.textContent = v.ok ? '✓ VALID — accepted by the game' : '✗ ' + v.reason;
+  $('encNotice').innerHTML = notices.map(n => '<div>▸ ' + n + '</div>').join('');
+  const raw = $('encRaw');
+  raw.hidden = false;
+  const s = extractState(e.src);
+  raw.innerHTML = rawDump('state $1E50-$1E58',
+      [s.hp, s.raw.e51, s.raw.e52, s.raw.e53, s.raw.e54, s.raw.e55,
+       s.raw.val & 0xFF, s.raw.val >> 8, s.raw.e58]) +
+    '<br>' + rawDump('payload+key+chk ($10-$17)', e.src);
+  if (fillDecode) fillDecGrid(e.pw);
+  renderDecode();
+}
+function liveEncodePreview(){ /* intentionally lightweight: preview renders on Generate */ }
+
+$('btnGen').onclick = generate;
+$('btnVar').onclick = newVariant;
+
+// ---- copy ----
+function copyText(t, btn){
+  const done = () => {
+    const old = btn.textContent;
+    btn.textContent = 'COPIED!';
+    setTimeout(() => { btn.textContent = old; }, 1200);
+  };
+  const fallback = () => {
+    const ta = document.createElement('textarea');
+    ta.value = t; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch (err) {}
+    ta.remove(); done();
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText)
+    navigator.clipboard.writeText(t).then(done, fallback);
+  else fallback();
+}
+$('decCopy').onclick = () => copyText(decInputs.map(i => i.value).join(''), $('decCopy'));
+$('encCopy').onclick = () => lastEncode && copyText(lastEncode.pw, $('encCopy'));
+
+// ---- presets ----
+document.querySelectorAll('.presets button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const pw = btn.dataset.pw;
+    fillDecGrid(pw);
+    renderDecode();
+    const d = decodePassword(pw);
+    const v = validate(d.src);
+    if (v.ok){
+      const s = extractState(d.src);
+      syncUIFromState({
+        crest: s.crest, ult: s.ult, spell: s.spell, potion: s.potion,
+        talis: s.talis, cont: s.cont, boss: s.boss
+      });
+      lastEncode = null;
+    }
+  });
+});
+
+// ---- self-test ----
+$('btnTest').onclick = () => {
+  const out = $('testOut');
+  let knownPass = 0; const fails = [];
+  for (const [name, pw] of KNOWN){
+    try {
+      const d = decodePassword(pw);
+      const v = validate(d.src);
+      if (!v.ok){ fails.push(`${name}: ${v.reason}`); continue; }
+      const s = extractState(d.src);
+      const st = { crest: s.crest, ult: s.ult, spell: s.spell, potion: s.potion,
+                   talis: s.talis, cont: s.cont, boss: s.boss };
+      const re = encodeState(st, d.src[6] >> 4, false);
+      if (re.src.join(',') !== d.src.join(',')){ fails.push(`${name}: re-encode mismatch`); continue; }
+      knownPass++;
+    } catch (err){ fails.push(`${name}: ${err.message}`); }
+  }
+  let rndPass = 0;
+  for (let i = 0; i < 300; i++){
+    const st = {
+      crest: Math.floor(Math.random()*256), ult: Math.random() < 0.1,
+      spell: Math.floor(Math.random()*32), potion: Math.floor(Math.random()*32),
+      talis: Math.floor(Math.random()*256) & 0xF8,
+      cont: Math.floor(Math.random()*65536), boss: Math.random() < 0.1
+    };
+    const { state } = autoFix(st);
+    const e = encodeState(state, null, false);
+    const v = validate(e.src);
+    if (!v.ok){ fails.push(`random#${i}: generated password rejected (${v.reason})`); continue; }
+    const s = extractState(e.src);
+    const good = s.crest === state.crest && s.ult === state.ult &&
+                 s.spell === state.spell && s.potion === state.potion &&
+                 s.talis === state.talis && s.cont === state.cont && s.boss === state.boss;
+    if (!good){ fails.push(`random#${i}: state mismatch`); continue; }
+    rndPass++;
+  }
+  out.innerHTML = fails.length
+    ? `<span class="bad">✗ FAILURES: ${fails.length}</span> — ${fails.slice(0,5).join(' | ')}`
+    : `<span class="ok">✓ ${knownPass}/${KNOWN.length} known passwords round-trip exactly · ${rndPass}/300 random states encode → decode → state identity</span>`;
+};
+
+// ---- init: preload V1 ----
+document.querySelector('.presets button[data-pw="HDDSDTGXBQQZNDMN"]').click();
+</script>
+</body>
+</html>
