@@ -1,0 +1,120 @@
+04:BC3C  JSR $BC0F                  ; 20 0F BC
+04:BC3F  REP #$30                   ; C2 30
+04:BC41  LDX #0000                  ; A2 00 00
+04:BC44  STZ $00,X                  ; 74 00
+04:BC46  INX                        ; E8
+04:BC47  INX                        ; E8
+04:BC48  CPX #0020                  ; E0 20 00
+04:BC4B  BNE $BC44                  ; D0 F7
+04:BC4D  LDX #0000                  ; A2 00 00
+04:BC50  TXY                        ; 9B
+04:BC51  LDA $1D68                  ; AD 68 1D
+04:BC54  AND #00FF                  ; 29 FF 00
+04:BC57  STA $00                    ; 85 00
+04:BC59  LSR $00                    ; 46 00
+04:BC5B  BCC $BC77                  ; 90 1A
+04:BC5D  LDY $04                    ; A4 04
+04:BC5F  LDA $C824,Y                ; B9 24 C8
+04:BC62  CLC                        ; 18
+04:BC63  ADC $02                    ; 65 02
+04:BC65  TAX                        ; AA
+04:BC66  LDA $0000,X                ; BD 00 00
+04:BC69  AND #00FF                  ; 29 FF 00
+04:BC6C  PHA                        ; 48
+04:BC6D  TYA                        ; 98
+04:BC6E  LSR A                      ; 4A
+04:BC6F  TAY                        ; A8
+04:BC70  PLA                        ; 68
+04:BC71  ORA $0010,Y                ; 19 10 00
+04:BC74  STA $0010,Y                ; 99 10 00
+04:BC77  INC $04                    ; E6 04
+04:BC79  INC $04                    ; E6 04
+04:BC7B  LDA $04                    ; A5 04
+04:BC7D  CMP #0010                  ; C9 10 00
+04:BC80  BNE $BC8D                  ; D0 0B
+04:BC82  STZ $04                    ; 64 04
+04:BC84  INC $02                    ; E6 02
+04:BC86  LDA $02                    ; A5 02
+04:BC88  CMP #0008                  ; C9 08 00
+04:BC8B  BEQ $BCA6                  ; F0 19
+04:BC8D  INC $06                    ; E6 06
+04:BC8F  LDA $06                    ; A5 06
+04:BC91  CMP #0008                  ; C9 08 00
+04:BC94  BNE $BC59                  ; D0 C3
+04:BC96  STZ $06                    ; 64 06
+04:BC98  INC $08                    ; E6 08
+04:BC9A  LDX $08                    ; A6 08
+04:BC9C  LDA $1D68,X                ; BD 68 1D
+04:BC9F  AND #00FF                  ; 29 FF 00
+04:BCA2  STA $00                    ; 85 00
+04:BCA4  BRA $BC59                  ; 80 B3
+04:BCA6  SEP #$30                   ; E2 30
+04:BCA8  LDA $10                    ; A5 10
+04:BCAA  CLC                        ; 18
+04:BCAB  ADC $11                    ; 65 11
+04:BCAD  CLC                        ; 18
+04:BCAE  ADC $12                    ; 65 12
+04:BCB0  CLC                        ; 18
+04:BCB1  ADC $13                    ; 65 13
+04:BCB3  CLC                        ; 18
+04:BCB4  ADC $14                    ; 65 14
+04:BCB6  CLC                        ; 18
+04:BCB7  ADC $15                    ; 65 15
+04:BCB9  CLC                        ; 18
+04:BCBA  ADC $16                    ; 65 16
+04:BCBC  CMP $17                    ; C5 17
+04:BCBE  BEQ $BCC3                  ; F0 03
+04:BCC0  JMP $BD42                  ; 4C 42 BD
+04:BCC3  LDA $16                    ; A5 16
+04:BCC5  AND #F0                    ; 29 F0
+04:BCC7  BEQ $BCC0                  ; F0 F7
+04:BCC9  CMP #F0                    ; C9 F0
+04:BCCB  BEQ $BCC0                  ; F0 F3
+04:BCCD  LDA $10                    ; A5 10
+04:BCCF  EOR $16                    ; 45 16
+04:BCD1  STA $10                    ; 85 10
+04:BCD3  LDA $11                    ; A5 11
+04:BCD5  EOR $16                    ; 45 16
+04:BCD7  STA $11                    ; 85 11
+04:BCD9  LDA $12                    ; A5 12
+04:BCDB  EOR $16                    ; 45 16
+04:BCDD  STA $12                    ; 85 12
+04:BCDF  LDA $13                    ; A5 13
+04:BCE1  EOR $16                    ; 45 16
+04:BCE3  STA $13                    ; 85 13
+04:BCE5  LDA $14                    ; A5 14
+04:BCE7  EOR $16                    ; 45 16
+04:BCE9  STA $14                    ; 85 14
+04:BCEB  LDA $15                    ; A5 15
+04:BCED  EOR $16                    ; 45 16
+04:BCEF  STA $15                    ; 85 15
+04:BCF1  LDA #F0                    ; A9 F0
+04:BCF3  TRB $16                    ; 14 16
+04:BCF5  LDA $10                    ; A5 10
+04:BCF7  CLC                        ; 18
+04:BCF8  ADC $11                    ; 65 11
+04:BCFA  CLC                        ; 18
+04:BCFB  ADC $12                    ; 65 12
+04:BCFD  CLC                        ; 18
+04:BCFE  ADC $13                    ; 65 13
+04:BD00  CLC                        ; 18
+04:BD01  ADC $14                    ; 65 14
+04:BD03  CLC                        ; 18
+04:BD04  ADC $15                    ; 65 15
+04:BD06  AND #0F                    ; 29 0F
+04:BD08  CMP $16                    ; C5 16
+04:BD0A  BEQ $BD0F                  ; F0 03
+04:BD0C  JMP $BD42                  ; 4C 42 BD
+04:BD0F  REP #$20                   ; C2 20
+04:BD11  LDA $13                    ; A5 13
+04:BD13  BIT #0001                  ; 89 01 00
+04:BD16  BNE $BD23                  ; D0 0B
+04:BD18  AND #FFFE                  ; 29 FE FF
+04:BD1B  BNE $BD42                  ; D0 25
+04:BD1D  LDA $10                    ; A5 10
+04:BD1F  ORA $11                    ; 05 11
+04:BD21  BNE $BD42                  ; D0 1F
+04:BD23  LDA $10                    ; A5 10
+04:BD25  AND #0100                  ; 29 00 01
+04:BD28  BEQ $BD3F                  ; F0 15
+04:BD2A  LDA $10                    ; A5 10
